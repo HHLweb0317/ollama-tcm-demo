@@ -1,22 +1,33 @@
 import requests
 
 url = "http://localhost:11434/api/chat"
-data = {
-    "model": "deepseek-r1",
-    "stream": False,
-    "messages": [
-        {"role": "system", "content": "你是一个幽默的中药学学长，说话喜欢用比喻。"},
-        {"role": "user", "content": "用3句话向我女朋友解释当归为什么被称为‘女科之圣药’，要让她觉得中药很浪漫。"}
-    ]
-}
+# 保存完整对话上下文，实现对话记忆
+messages = [
+    {"role": "system", "content": "你是幽默的中药学学长，擅长使用比喻。"}
+]
 
-print("🧠 正在生成你的专属浪漫科普...")
-try:
-    resp = requests.post(url, json=data, timeout=120)
-    resp.raise_for_status()
-    res = resp.json()
-    print("\n输出结果：")
-    print(res['message']['content'])
-except Exception as e:
-    print("网络/异常错误：", e)
-    print("网络/异常错误：", e)
+print("====中药AI对话（带记忆，输入exit退出）====")
+while True:
+    user_input = input("\n请输入问题：")
+    if user_input.strip().lower() == "exit":
+        print("结束程序")
+        break
+    messages.append({"role":"user","content":user_input})
+
+    data = {
+        "model":"deepseek-r1",
+        "stream":False,
+        "messages":messages,
+        "timeout":240
+    }
+    print("🧠思考中……")
+    try:
+        resp = requests.post(url,json=data,timeout=240)
+        resp.raise_for_status()
+        res = resp.json()
+        reply = res["message"]["content"]
+        print(f"\n回答：{reply}")
+        # 将AI回答存入记忆
+        messages.append({"role":"assistant","content":reply})
+    except Exception as e:
+        print("错误：",e)
